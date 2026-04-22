@@ -300,7 +300,20 @@ def convert_to_scitype(
     if to_scitype == from_scitype:
         return obj
 
-    func_name = f"convert_{from_scitype}_to_{to_scitype}"
-    func = eval(func_name)
+    dispatch = {
+        ("Series", "Panel"): convert_Series_to_Panel,
+        ("Panel", "Series"): convert_Panel_to_Series,
+        ("Series", "Hierarchical"): convert_Series_to_Hierarchical,
+        ("Hierarchical", "Series"): convert_Hierarchical_to_Series,
+        ("Panel", "Hierarchical"): convert_Panel_to_Hierarchical,
+        ("Hierarchical", "Panel"): convert_Hierarchical_to_Panel,
+    }
+
+    try:
+        func = dispatch[(from_scitype, to_scitype)]
+    except KeyError as exc:
+        raise ValueError(
+            f"conversion from {from_scitype} to {to_scitype} is not supported"
+        ) from exc
 
     return func(obj, store=store, return_to_mtype=return_to_mtype)

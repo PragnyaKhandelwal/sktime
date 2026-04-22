@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from sktime.datatypes._series_as_panel import (
+    convert_to_scitype,
     convert_Panel_to_Series,
     convert_Series_to_Panel,
 )
@@ -73,3 +74,31 @@ def test_convert_df_panel_to_series():
     assert isinstance(X_series, pd.DataFrame)
     assert len(X_series) == len(X_panel)
     assert (X_series.values == X_panel.values).all()
+
+
+@pytest.mark.skipif(
+    not run_test_module_changed("sktime.datatypes"),
+    reason="Test only if sktime.datatypes or utils.parallel has been changed",
+)
+def test_convert_to_scitype_dispatch():
+    """Test dispatch in convert_to_scitype across supported routes."""
+    X_series = _make_series(n_columns=2, return_mtype="pd.DataFrame")
+
+    X_panel = convert_to_scitype(X_series, to_scitype="Panel")
+    assert isinstance(X_panel, list)
+
+    X_hierarchical = convert_to_scitype(X_series, to_scitype="Hierarchical")
+    assert isinstance(X_hierarchical, pd.DataFrame)
+    assert X_hierarchical.index.nlevels == 3
+
+    X_series_back, series_mtype = convert_to_scitype(
+        X_panel, to_scitype="Series", return_to_mtype=True
+    )
+    assert isinstance(X_series_back, pd.DataFrame)
+    assert series_mtype == "pd.DataFrame"
+
+    X_panel_back, panel_mtype = convert_to_scitype(
+        X_hierarchical, to_scitype="Panel", return_to_mtype=True
+    )
+    assert isinstance(X_panel_back, pd.DataFrame)
+    assert panel_mtype == "pd-multiindex"
