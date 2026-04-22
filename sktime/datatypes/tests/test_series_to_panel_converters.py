@@ -82,23 +82,58 @@ def test_convert_df_panel_to_series():
 )
 def test_convert_to_scitype_dispatch():
     """Test dispatch in convert_to_scitype across supported routes."""
-    X_series = _make_series(n_columns=2, return_mtype="pd.DataFrame")
+    calls = []
 
-    X_panel = convert_to_scitype(X_series, to_scitype="Panel")
-    assert isinstance(X_panel, list)
+    def _sentinel(name):
+        def _func(obj, store=None, return_to_mtype=False):
+            calls.append(name)
+            if return_to_mtype:
+                return name, name
+            return name
 
-    X_hierarchical = convert_to_scitype(X_series, to_scitype="Hierarchical")
-    assert isinstance(X_hierarchical, pd.DataFrame)
-    assert X_hierarchical.index.nlevels == 3
+        return _func
 
-    X_series_back, series_mtype = convert_to_scitype(
-        X_panel, to_scitype="Series", return_to_mtype=True
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(
+        "sktime.datatypes._series_as_panel._convert.convert_Series_to_Panel",
+        _sentinel("Series->Panel"),
     )
-    assert isinstance(X_series_back, pd.DataFrame)
-    assert series_mtype == "pd.DataFrame"
-
-    X_panel_back, panel_mtype = convert_to_scitype(
-        X_hierarchical, to_scitype="Panel", return_to_mtype=True
+    monkeypatch.setattr(
+        "sktime.datatypes._series_as_panel._convert.convert_Panel_to_Series",
+        _sentinel("Panel->Series"),
     )
-    assert isinstance(X_panel_back, pd.DataFrame)
-    assert panel_mtype == "pd-multiindex"
+    monkeypatch.setattr(
+        "sktime.datatypes._series_as_panel._convert.convert_Series_to_Hierarchical",
+        _sentinel("Series->Hierarchical"),
+    )
+    monkeypatch.setattr(
+        "sktime.datatypes._series_as_panel._convert.convert_Hierarchical_to_Series",
+        _sentinel("Hierarchical->Series"),
+    )
+    monkeypatch.setattr(
+        "sktime.datatypes._series_as_panel._convert.convert_Panel_to_Hierarchical",
+        _sentinel("Panel->Hierarchical"),
+    )
+    monkeypatch.setattr(
+        "sktime.datatypes._series_as_panel._convert.convert_Hierarchical_to_Panel",
+        _sentinel("Hierarchical->Panel"),
+    )
+
+    try:
+        assert convert_to_scitype("x", to_scitype="Panel", from_scitype="Series") == "Series->Panel"
+        assert convert_to_scitype("x", to_scitype="Series", from_scitype="Panel") == "Panel->Series"
+        assert convert_to_scitype("x", to_scitype="Hierarchical", from_scitype="Series") == "Series->Hierarchical"
+        assert convert_to_scitype("x", to_scitype="Series", from_scitype="Hierarchical") == "Hierarchical->Series"
+        assert convert_to_scitype("x", to_scitype="Hierarchical", from_scitype="Panel") == "Panel->Hierarchical"
+        assert convert_to_scitype("x", to_scitype="Panel", from_scitype="Hierarchical") == "Hierarchical->Panel"
+
+        assert calls == [
+            "Series->Panel",
+            "Panel->Series",
+            "Series->Hierarchical",
+            "Hierarchical->Series",
+            "Panel->Hierarchical",
+            "Hierarchical->Panel",
+        ]
+    finally:
+        monkeypatch.undo()
