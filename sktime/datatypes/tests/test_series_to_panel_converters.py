@@ -5,9 +5,9 @@ import pandas as pd
 import pytest
 
 from sktime.datatypes._series_as_panel import (
-    convert_to_scitype,
     convert_Panel_to_Series,
     convert_Series_to_Panel,
+    convert_to_scitype,
 )
 from sktime.tests.test_switch import run_test_module_changed
 from sktime.utils._testing.panel import _make_panel
@@ -120,12 +120,30 @@ def test_convert_to_scitype_dispatch():
     )
 
     try:
-        assert convert_to_scitype("x", to_scitype="Panel", from_scitype="Series") == "Series->Panel"
-        assert convert_to_scitype("x", to_scitype="Series", from_scitype="Panel") == "Panel->Series"
-        assert convert_to_scitype("x", to_scitype="Hierarchical", from_scitype="Series") == "Series->Hierarchical"
-        assert convert_to_scitype("x", to_scitype="Series", from_scitype="Hierarchical") == "Hierarchical->Series"
-        assert convert_to_scitype("x", to_scitype="Hierarchical", from_scitype="Panel") == "Panel->Hierarchical"
-        assert convert_to_scitype("x", to_scitype="Panel", from_scitype="Hierarchical") == "Hierarchical->Panel"
+        assert (
+            convert_to_scitype("x", to_scitype="Panel", from_scitype="Series")
+            == "Series->Panel"
+        )
+        assert (
+            convert_to_scitype("x", to_scitype="Series", from_scitype="Panel")
+            == "Panel->Series"
+        )
+        assert (
+            convert_to_scitype("x", to_scitype="Hierarchical", from_scitype="Series")
+            == "Series->Hierarchical"
+        )
+        assert (
+            convert_to_scitype("x", to_scitype="Series", from_scitype="Hierarchical")
+            == "Hierarchical->Series"
+        )
+        assert (
+            convert_to_scitype("x", to_scitype="Hierarchical", from_scitype="Panel")
+            == "Panel->Hierarchical"
+        )
+        assert (
+            convert_to_scitype("x", to_scitype="Panel", from_scitype="Hierarchical")
+            == "Hierarchical->Panel"
+        )
 
         assert calls == [
             "Series->Panel",
