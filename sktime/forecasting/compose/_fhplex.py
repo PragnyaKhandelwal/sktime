@@ -26,12 +26,11 @@ class FhPlexForecaster(BaseForecaster):
     Parameters
     ----------
     forecaster : sktime compatible forecaster
-    fh_params : dict, list, callable, or str that eval-defines a callable
+    fh_params : dict, list, or callable, optional (default=None)
         specifies forecaster to use per fh element
         dict: keys = fh elements, values = param dict for forecaster
         list: i-th entry is forecaster param dict for i-th fh element
         callable: maps fh element to forecaster param dict
-        str: eval(fh_params) must define a lambda that maps fh element to param dict
         param dict need not be complete, only overrides for ``forecaster`` params
     fh_lookup : str, one of "relative" (default), "absolute", or "as-is"
         specifies fh elements used in dict or callable
@@ -126,7 +125,11 @@ class FhPlexForecaster(BaseForecaster):
                 return fh_params[ix]
 
         elif isinstance(fh_params, str):
-            ret_param = eval(fh_params)
+            raise TypeError(
+                f"fh_params must be dict, list, or callable, not str. "
+                f"Received str: {fh_params!r}. "
+                f"Pass a callable directly, e.g., lambda x: {...} instead of a string."
+            )
         else:
             ret_param = fh_params
 
