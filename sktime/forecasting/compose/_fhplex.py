@@ -500,6 +500,10 @@ class FhPlexForecaster(BaseForecaster):
             "fh_lookup": "relative",
             "fh_contiguous": True,
         }
-        params3 = {"forecaster": f, "fh_params": naive_callable, "fh_lookup": "relative"}
+        params3 = {
+            "forecaster": f,
+            "fh_params": naive_callable,
+            "fh_lookup": "relative",
+        }
 
         return [params1, params2, params3]
