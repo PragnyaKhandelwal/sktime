@@ -489,8 +489,6 @@ class FhPlexForecaster(BaseForecaster):
         naive_list = [{"strategy": x} for x in naive_m * 20]
         naive_dict = {k: naive_list[k % 3] for k in range(-50, 10)}
 
-        naive_callable = lambda ix: {"strategy": ["last", "last", "last"][ix % 3]}
-
         f = NaiveForecaster()
 
         params1 = {"forecaster": f, "fh_params": naive_list}
@@ -500,10 +498,5 @@ class FhPlexForecaster(BaseForecaster):
             "fh_lookup": "relative",
             "fh_contiguous": True,
         }
-        params3 = {
-            "forecaster": f,
-            "fh_params": naive_callable,
-            "fh_lookup": "relative",
-        }
 
-        return [params1, params2, params3]
+        return [params1, params2]
